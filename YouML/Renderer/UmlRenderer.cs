@@ -2,6 +2,7 @@
 using System.Text;
 using YouML.Tools;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 
 namespace YouML.Renderer
 {
@@ -15,8 +16,7 @@ namespace YouML.Renderer
 
             sb.AppendLine("@startuml");//desc start
             sb.AppendFormat("Frame {0} {1}", classModel.Namespace, BackgroundColor).Append("{").AppendLine();//namespace start
-            AddBaseObjects(classModel, sb);
-            sb.AppendFormat("class {0} ", classModel.ClassDeclarationSyntax.Identifier.ValueText).Append("{").AppendLine();//class start
+            AddBaseAndClassObjects(classModel, sb);
             AddConstructors(classModel, sb);
             AddEnums(classModel, sb);
             AddFields(classModel, sb);
@@ -32,26 +32,66 @@ namespace YouML.Renderer
             return sb.ToString();
         }
 
-        private static void AddBaseObjects(ClassModel classModel, StringBuilder sb)
+        private static void AddBaseAndClassObjects(ClassModel classModel, StringBuilder sb)
         {
+
+            if (classModel.ClassDeclarationSyntax is null)
+            {
+                sb.Append("class null{");
+                return;
+            }
+
             if (classModel.ClassDeclarationSyntax.BaseList != null)
             {
+                
+                    
+
                 foreach (var baseType in classModel.ClassDeclarationSyntax.BaseList.Types)
                 {
+                    string baseObject = string.Empty;
+
+
                     if (baseType.Type.ToString().StartsWith("I")) //todo improve interface recognition
                     {
-                        sb.AppendFormat("class {0} implements {1}", classModel.ClassDeclarationSyntax.Identifier.ValueText, (baseType.Type.ToString())).AppendLine();
+                        baseObject = string.Format("interface \"{0}\" as {1}", baseType.Type.ToString(), baseType.Type.ToString().Replace('<','_').Replace('>', ' '));
                     }
                     else
                     {
-                        sb.AppendFormat("class {0} extends {1}", classModel.ClassDeclarationSyntax.Identifier.ValueText, (baseType.Type.ToString())).AppendLine();
+                        baseObject = string.Format("class \"{0}\" as {1}", baseType.Type.ToString(), baseType.Type.ToString().Replace('<', '_').Replace('>', ' '));
                     }
+
+                    sb.AppendFormat(baseObject).AppendLine();
+                    
                 }
+
+                sb.AppendFormat("class {0} ", classModel.ClassDeclarationSyntax.Identifier.ValueText);
+
+                if (classModel.ClassDeclarationSyntax.BaseList.Types.Count > 0) sb.Append("extends ");
+
+
+                string extends = string.Empty;
+                foreach (var baseType in classModel.ClassDeclarationSyntax.BaseList.Types)
+                {
+
+                    extends = string.Format(baseType.Type.ToString().Replace('<', '_').Replace('>', ' ') + ", ");
+                }
+
+                extends = extends.Remove(extends.Length - 2);
+
+                sb.Append(extends);
+
+                sb.Append("{").AppendLine();//class start
+
+
             }
         }
+        
 
         private static void AddConstructors(ClassModel classModel, StringBuilder sb)
         {
+
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.ConstructorDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
@@ -76,6 +116,8 @@ namespace YouML.Renderer
         
         private static void AddEvents(ClassModel classModel, StringBuilder sb)
         {
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.EventDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
@@ -99,6 +141,8 @@ namespace YouML.Renderer
 
         private static void AddFields(ClassModel classModel, StringBuilder sb)
         {
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.FieldDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
@@ -123,6 +167,8 @@ namespace YouML.Renderer
 
         private static void AddProps(ClassModel classModel, StringBuilder sb)
         {
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.PropertyDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
@@ -150,6 +196,8 @@ namespace YouML.Renderer
 
         private static void AddMethods(ClassModel classModel, StringBuilder sb)
         {
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.MethodDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
@@ -177,6 +225,8 @@ namespace YouML.Renderer
 
         private static void AddEnums(ClassModel classModel, StringBuilder sb)
         {
+            if (classModel.ClassDeclarationSyntax is null) return;
+
             using (var e = classModel.EnumDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
