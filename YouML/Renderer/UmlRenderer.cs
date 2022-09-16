@@ -73,7 +73,7 @@ namespace YouML.Renderer
                 foreach (var baseType in classModel.ClassDeclarationSyntax.BaseList.Types)
                 {
 
-                    extends = string.Format(baseType.Type.ToString().Replace('<', '_').Replace('>', ' ') + ", ");
+                    extends += string.Format(baseType.Type.ToString().Replace('<', '_').Replace('>', ' ') + ", ");
                 }
 
                 extends = extends.Remove(extends.Length - 2);
