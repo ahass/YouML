@@ -1,8 +1,6 @@
-﻿using YouML.Models;
-using System.Text;
+﻿using System.Text;
+using YouML.Models;
 using YouML.Tools;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 
 namespace YouML.Renderer
 {
@@ -26,7 +24,7 @@ namespace YouML.Renderer
 
             sb.AppendLine("}");//class close
             sb.AppendLine("}");//namespace close
-            
+
             sb.AppendLine("@enduml");//desc close
 
             return sb.ToString();
@@ -43,8 +41,8 @@ namespace YouML.Renderer
 
             if (classModel.ClassDeclarationSyntax.BaseList != null)
             {
-                
-                    
+
+
 
                 foreach (var baseType in classModel.ClassDeclarationSyntax.BaseList.Types)
                 {
@@ -53,7 +51,7 @@ namespace YouML.Renderer
 
                     if (baseType.Type.ToString().StartsWith("I")) //todo improve interface recognition
                     {
-                        baseObject = string.Format("interface \"{0}\" as {1}", baseType.Type.ToString(), baseType.Type.ToString().Replace('<','_').Replace('>', ' '));
+                        baseObject = string.Format("interface \"{0}\" as {1}", baseType.Type.ToString(), baseType.Type.ToString().Replace('<', '_').Replace('>', ' '));
                     }
                     else
                     {
@@ -61,7 +59,7 @@ namespace YouML.Renderer
                     }
 
                     sb.AppendFormat(baseObject).AppendLine();
-                    
+
                 }
 
                 sb.AppendFormat("class {0} ", classModel.ClassDeclarationSyntax.Identifier.ValueText);
@@ -84,8 +82,35 @@ namespace YouML.Renderer
 
 
             }
+            else
+            {
+
+
+                sb.AppendFormat("class {0} ", classModel.ClassDeclarationSyntax.Identifier.ValueText);
+
+                if (classModel.ClassDeclarationSyntax.BaseList?.Types.Count > 0) sb.Append("extends ");
+
+
+                if (classModel.ClassDeclarationSyntax.BaseList != null)
+                {
+                    var extends = string.Empty;
+                    foreach (var baseType in classModel.ClassDeclarationSyntax.BaseList.Types)
+                    {
+
+                        extends = string.Format(baseType.Type.ToString().Replace('<', '_').Replace('>', ' ') + ", ");
+                    }
+
+                    extends = extends.Remove(extends.Length - 2);
+
+                    sb.Append(extends);
+                }
+
+                sb.Append("{").AppendLine();//class start
+
+            }
+
         }
-        
+
 
         private static void AddConstructors(ClassModel classModel, StringBuilder sb)
         {
@@ -95,7 +120,7 @@ namespace YouML.Renderer
             using (var e = classModel.ConstructorDeclarationSyntax.GetEnumerator())
             {
                 var allowCaption = true;
-                
+
                 while (e.MoveNext().Equals(true))
                 {
                     if (e.Current != null)
@@ -109,11 +134,11 @@ namespace YouML.Renderer
                         sb.AppendFormat("{0}{1}", e.Current.Modifiers.GetUmlModifiers(), e.Current.Identifier)
                             .Append("()").AppendLine();
                     }
-                        
+
                 }
             }
         }
-        
+
         private static void AddEvents(ClassModel classModel, StringBuilder sb)
         {
             if (classModel.ClassDeclarationSyntax is null) return;
@@ -157,7 +182,7 @@ namespace YouML.Renderer
                             allowCaption = false;
                         }
 
-                        sb.AppendFormat("{0}{1}", e.Current.Modifiers.GetUmlModifiers(), 
+                        sb.AppendFormat("{0}{1}", e.Current.Modifiers.GetUmlModifiers(),
                                 e.Current.Declaration.ToString().Split('=')[0].TrimEnd())
                             .AppendLine();
                     }
@@ -183,9 +208,9 @@ namespace YouML.Renderer
                             allowCaption = false;
                         }
 
-                        sb.AppendFormat("{0} {1} {2}", 
-                                e.Current.Modifiers.GetUmlModifiers(), 
-                                e.Current.Type, 
+                        sb.AppendFormat("{0} {1} {2}",
+                                e.Current.Modifiers.GetUmlModifiers(),
+                                e.Current.Type,
                                 e.Current.Identifier)
                             .AppendLine();
                     }
@@ -212,9 +237,9 @@ namespace YouML.Renderer
                             allowCaption = false;
                         }
 
-                        sb.AppendFormat("{0}{1} {2}", 
-                                e.Current.Modifiers.GetUmlModifiers(), 
-                                e.Current.ReturnType, 
+                        sb.AppendFormat("{0}{1} {2}",
+                                e.Current.Modifiers.GetUmlModifiers(),
+                                e.Current.ReturnType,
                                 e.Current.Identifier)
                             .Append("()").AppendLine();
                     }
